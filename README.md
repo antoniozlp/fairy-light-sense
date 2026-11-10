@@ -47,6 +47,30 @@ run from a terminal:
 uv run python -m fairy_kws.mswc
 ```
 
+## Try a model with the computer's microphone
+
+After training, this listens to the microphone and prints what the model hears,
+using the same steps the board will: the last second of audio is classified ten
+times per second, the scores are averaged, and a command only counts within two
+seconds after the wake word.
+
+```bash
+uv run python -m fairy_kws.listen
+```
+
+Say "crystal", then "on", "off" or "bright". The line at the bottom shows whether
+a command is awaited, the lamp state, the microphone level and the current score
+of each keyword; every detection is printed above it. Stop with Ctrl+C. The first time, macOS asks
+whether the terminal may use the microphone.
+
+| Option | Use |
+|---|---|
+| `--model models/crystal/tiny_conv` | another model folder (default: `models/crystal/ds_cnn`) |
+| `--threshold 0.8` | score a keyword needs to count (default 0.7); higher means fewer false triggers and more missed words |
+| `--window 3` | seconds a command is accepted after the wake word (default 2) |
+| `--list-devices`, `--device 2` | show the microphones, pick one |
+| `--file recording.wav` | classify a sound file instead of the microphone |
+
 ## Development
 
 ### Adding a dependency
@@ -72,7 +96,7 @@ committed with outputs.
 ```
 ├── docs/PLAN.md          project plan
 ├── notebooks/            Jupyter notebooks, numbered in the order they are used
-├── src/fairy_kws/        shared Python code: settings, features, datasets, models, export
+├── src/fairy_kws/        shared Python code: settings, features, datasets, models, export, live test
 ├── tests/                pytest tests
 ├── data/                 datasets (not committed)
 ├── models/               training outputs, one folder per wake word (not committed)

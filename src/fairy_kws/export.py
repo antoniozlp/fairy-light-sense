@@ -47,27 +47,36 @@ def to_int8_tflite(model: keras.Model, representative_features: np.ndarray) -> b
         logger.setLevel(level)
 
 
-def tflite_predict(tflite_model: bytes, features: np.ndarray) -> np.ndarray:
-    """Run an int8 TensorFlow Lite model, returning class probabilities per example.
+class Int8Model:
+    """An int8 TensorFlow Lite model kept loaded, for running it many times.
 
     Inputs are quantised and outputs de-quantised with the scales stored in the
     model, which is what the firmware does on the board.
     """
-    interpreter = tf.lite.Interpreter(model_content=tflite_model)
-    interpreter.allocate_tensors()
-    inp = interpreter.get_input_details()[0]
-    out = interpreter.get_output_details()[0]
-    in_scale, in_zero = inp["quantization"]
-    out_scale, out_zero = out["quantization"]
-    quantized = np.clip(np.round(features / in_scale + in_zero), -128, 127).astype(np.int8)
-    scores = np.empty((len(features), out["shape"][-1]), dtype=np.float32)
-    for i, example in enumerate(quantized):
-        interpreter.set_tensor(inp["index"], example[np.newaxis])
-        interpreter.invoke()
-        scores[i] = (interpreter.get_tensor(out["index"])[0].astype(np.float32) - out_zero) * (
-            out_scale
-        )
-    return scores
+
+    def __init__(self, tflite_model: bytes):
+        self.interpreter = tf.lite.Interpreter(model_content=tflite_model)
+        self.interpreter.allocate_tensors()
+        self.input = self.interpreter.get_input_details()[0]
+        self.output = self.interpreter.get_output_details()[0]
+
+    def predict(self, features: np.ndarray) -> np.ndarray:
+        """Class probabilities for a batch of feature maps, one row per example."""
+        in_scale, in_zero = self.input["quantization"]
+        out_scale, out_zero = self.output["quantization"]
+        quantized = np.clip(np.round(features / in_scale + in_zero), -128, 127).astype(np.int8)
+        scores = np.empty((len(features), self.output["shape"][-1]), dtype=np.float32)
+        for i, example in enumerate(quantized):
+            self.interpreter.set_tensor(self.input["index"], example[np.newaxis])
+            self.interpreter.invoke()
+            raw = self.interpreter.get_tensor(self.output["index"])[0]
+            scores[i] = (raw.astype(np.float32) - out_zero) * out_scale
+        return scores
+
+
+def tflite_predict(tflite_model: bytes, features: np.ndarray) -> np.ndarray:
+    """Run an int8 TensorFlow Lite model, returning class probabilities per example."""
+    return Int8Model(tflite_model).predict(features)
 
 
 def tflite_ops(tflite_model: bytes) -> list[str]:

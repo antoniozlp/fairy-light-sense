@@ -25,7 +25,7 @@ there are two ways to handle that:
 | Model classes | silence, unknown, `crystal`, `on`, `off`, `bright` | silence, unknown, `crystal on`, `crystal off`, `crystal bright`, … |
 | Audio window | 1 s, 49×40 features (unchanged from `micro_speech`) | 1.5–2 s, about twice the input and compute |
 | Public data | `on`/`off` in Speech Commands; `crystal`/`bright` in MSWC | none; every clip must be recorded or synthesised |
-| Firmware | hear `crystal`, then accept `on`/`off`/`bright` for about 1.5 s | direct mapping, no state machine |
+| Firmware | hear `crystal`, then accept `on`/`off`/`bright` for about 2 s | direct mapping, no state machine |
 | False triggers | low: two detections in a row are needed | depends entirely on the custom data |
 | Adding a command | one new word | one new phrase, new recordings |
 
@@ -148,6 +148,17 @@ Metrics, in order of importance for a lamp that sits in a living room:
 - Weakest spot now: `bright` precision (61% for `ds_cnn`), mostly *light* and
   *right* taken for `bright`. Still not tested on the board or on our own voices.
 
+### Phase 2b: Live test on the computer (script done, real voices to do)
+- `uv run python -m fairy_kws.listen` runs the int8 model on the computer's
+  microphone with the recogniser the firmware will need: scores averaged over
+  0.3 s, threshold 0.7, wake word then one command within 2 s.
+- On simulated streams (a test clip of `crystal`, a pause, a test clip of a
+  command, with background noise) `ds_cnn` completes about 8 of 10 commands; a
+  1.5 s window proved too short once the pause reached 0.6 s. Of single other
+  words, about 3% trigger the wake word, and 1 of 400 pairs of other words
+  changed the lamp.
+- To do: try it with our own voices and note which words fail.
+
 ### Phase 3: Baseline on the board
 - Install Arduino IDE or `arduino-cli`, the Nano 33 BLE core and the
   `Harvard_TinyMLx` library.
@@ -164,7 +175,7 @@ Metrics, in order of importance for a lamp that sits in a living room:
 - Decide between `tiny_conv` and `ds_cnn` from accuracy and measured on-board speed.
 
 ### Phase 5: Lamp behaviour and hardware
-- Firmware state machine: `crystal` opens a ~1.5 s window; `on`/`off`/`bright`
+- Firmware state machine: `crystal` opens a ~2 s window; `on`/`off`/`bright`
   act only inside it.
 - Drive the LED string through a logic-level MOSFET with PWM (the board's pins are
   3.3 V and cannot power the string directly); brightness levels for `bright`.
