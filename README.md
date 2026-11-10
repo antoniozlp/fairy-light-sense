@@ -71,6 +71,22 @@ whether the terminal may use the microphone.
 | `--list-devices`, `--device 2` | show the microphones, pick one |
 | `--file recording.wav` | classify a sound file instead of the microphone |
 
+## Firmware
+
+`firmware/` is a PlatformIO project for the Arduino Nano 33 BLE Sense. Put a
+trained model into it, then build and flash:
+
+```bash
+uv run python -m fairy_kws.firmware
+```
+
+```bash
+cd firmware && pio run --target upload
+```
+
+See [firmware/README.md](firmware/README.md) for what the LEDs and the serial
+output mean.
+
 ## Development
 
 ### Adding a dependency
@@ -100,7 +116,7 @@ committed with outputs.
 ├── tests/                pytest tests
 ├── data/                 datasets (not committed)
 ├── models/               training outputs, one folder per wake word (not committed)
-├── firmware/             Arduino sketch (added in Phase 3 of the plan)
+├── firmware/             PlatformIO project for the Arduino Nano 33 BLE Sense
 └── .github/workflows/    CI: lint, notebook check, tests
 ```
 

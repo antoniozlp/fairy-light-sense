@@ -159,14 +159,28 @@ Metrics, in order of importance for a lamp that sits in a living room:
   changed the lamp.
 - To do: try it with our own voices and note which words fail.
 
-### Phase 3: Baseline on the board
-- Install Arduino IDE or `arduino-cli`, the Nano 33 BLE core and the
-  `Harvard_TinyMLx` library.
-- Flash stock `micro_speech`, then swap in our model, labels and category count.
-- **Feature parity test**: print the features the board computes and compare with
-  the notebook's features for similar audio. This is the most common place for a
-  model to work in the notebook and fail on the device.
-- `on`/`off` drive the built-in LED.
+### Phase 3: Baseline on the board (first version running)
+- `firmware/` is a PlatformIO project built on the `micro_speech` example of
+  `Harvard_TinyMLx`: its microphone and feature code, our model, our recogniser
+  (the same rule and settings as `fairy_kws.listen`) and LED output.
+  `uv run python -m fairy_kws.firmware` puts a trained model and its labels in.
+- `ds_cnn` loads and runs on the Nano 33 BLE Sense: 290 ms per inference, 3.1
+  classifications per second, 30 kB of tensor arena. The blue LED shows the
+  command window, the orange LED the lamp state.
+- First test, a recording played through the computer's speakers: the board
+  heard `off` (0.98) and `crystal` (0.62 and 0.73), and missed `on` and `bright`.
+  Two findings:
+  - **Too slow.** At 3 classifications per second a word gets one or two
+    chances and scores cannot be averaged. Target: at least 8 per second, with
+    a smaller `ds_cnn` or fewer multiply-adds in its first layer.
+  - **The wake word is detected late.** `crystal` was reported 0.3 s after the
+    `off` that followed it, so the command was ignored. MSWC clips have the word
+    at the very start of the second and Speech Commands clips in the middle, and
+    the model learned those positions. Fix in training: place each word at a
+    random position in the second.
+- Still to do: the **feature parity test** (print the features the board
+  computes and compare with the notebook's for the same audio), and a test with
+  our own voices.
 
 ### Phase 4: Make it reliable
 - Add our own recordings and retrain; test on recordings made with the board.

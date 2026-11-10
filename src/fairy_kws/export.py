@@ -86,15 +86,20 @@ def tflite_ops(tflite_model: bytes) -> list[str]:
     return sorted({op["op_name"] for op in interpreter._get_ops_details()})
 
 
-def write_c_source(tflite_model: bytes, path: Path, name: str = "g_model") -> Path:
-    """Write the model as a C array, like `xxd -i` does in the tinyMLx colabs."""
+def c_array(tflite_model: bytes, name: str = "g_model") -> str:
+    """The model as C source: a byte array `name` and its length `name_len`."""
     rows = [
         "  " + ", ".join(f"0x{b:02x}" for b in tflite_model[i : i + 12])
         for i in range(0, len(tflite_model), 12)
     ]
-    path.write_text(
+    return (
         f"alignas(16) const unsigned char {name}[] = {{\n"
         + ",\n".join(rows)
         + f"\n}};\nconst int {name}_len = {len(tflite_model)};\n"
     )
+
+
+def write_c_source(tflite_model: bytes, path: Path, name: str = "g_model") -> Path:
+    """Write the model as a C array, like `xxd -i` does in the tinyMLx colabs."""
+    path.write_text(c_array(tflite_model, name))
     return path
