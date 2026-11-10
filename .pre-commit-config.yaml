@@ -1,0 +1,20 @@
+# Runs the tools from the project's own uv environment, so versions come from uv.lock.
+# Enable once per clone with: uv run pre-commit install
+repos:
+  - repo: local
+    hooks:
+      - id: nbstripout
+        name: strip notebook outputs
+        entry: uv run nbstripout
+        language: system
+        files: \.ipynb$
+      - id: ruff-check
+        name: ruff check
+        entry: uv run ruff check --fix
+        language: system
+        types_or: [python, jupyter]
+      - id: ruff-format
+        name: ruff format
+        entry: uv run ruff format
+        language: system
+        types_or: [python, jupyter]

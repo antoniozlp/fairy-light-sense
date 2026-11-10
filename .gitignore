@@ -1,0 +1,24 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Datasets and training outputs are large and reproducible: keep them out of git.
+data/*
+!data/README.md
+models/*
+!models/README.md
+
+# Arduino build output
+firmware/**/build/
+
+# OS / editors
+.DS_Store
+.vscode/
+.idea/

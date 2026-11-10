@@ -1,0 +1,43 @@
+[project]
+name = "fairy-kws"
+version = "0.1.0"
+description = "Keyword spotting for a voice-controlled fairy light lamp (TensorFlow Lite Micro, Arduino Nano 33 BLE Sense)"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "tensorflow>=2.19,<3",
+    "numpy",
+    "matplotlib",
+    "scikit-learn",
+    "soundfile",
+    "tqdm",
+    "jupyterlab",
+    "ipykernel",
+]
+
+[dependency-groups]
+dev = [
+    "ruff",
+    "pytest",
+    "nbstripout",
+    "pre-commit",
+    "nbconvert",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/fairy_kws"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-include = ["*.ipynb"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
