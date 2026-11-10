@@ -1,4 +1,4 @@
-# fairy-light-sens
+# fairy-light-sense
 
 A fairy light lamp controlled by voice. A small keyword spotting model listens for
 commands such as "crystal on", "crystal off" and "crystal bright" directly on an Arduino
