@@ -22,7 +22,9 @@ FEATURE_SCALE = 10.0 / 256.0
 def pad_or_trim(audio: tf.Tensor, length: int = config.CLIP_SAMPLES) -> tf.Tensor:
     """Force a 1-D waveform to exactly `length` samples."""
     audio = audio[:length]
-    return tf.pad(audio, [[0, length - tf.shape(audio)[0]]])
+    audio = tf.pad(audio, [[0, length - tf.shape(audio)[0]]])
+    # Inside tf.data the length is not known in advance; the front end needs it stated.
+    return tf.ensure_shape(audio, [length])
 
 
 def micro_features(audio: tf.Tensor) -> tf.Tensor:

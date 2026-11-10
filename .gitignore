@@ -22,3 +22,6 @@ firmware/**/build/
 .DS_Store
 .vscode/
 .idea/
+
+# Executed notebooks and figures from local runs
+reports/
