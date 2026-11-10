@@ -91,7 +91,7 @@ close the gap between dataset audio and the board's microphone; TTS only if a wo
 
 | Model | Size (int8) | Role |
 |---|---|---|
-| `tiny_conv` (one conv layer + dense, from `micro_speech`) | 19 kB, about 0.34 million multiply-adds | Baseline. Runs unchanged in the reference firmware. |
+| `tiny_conv` (one conv layer + dense, from `micro_speech`) | 27 kB, about 0.34 million multiply-adds | Baseline. Runs unchanged in the reference firmware. |
 | `ds_cnn` (depthwise-separable CNN, after the MLPerf Tiny keyword spotting reference) | 37 kB, about 3.7 million multiply-adds | Step up in accuracy at roughly ten times the computation; its speed on the board is not yet measured. |
 
 Board budget: 1 MB flash and 256 kB RAM leave room for either. Targets to confirm
@@ -127,7 +127,26 @@ Metrics, in order of importance for a lamp that sits in a living room:
   words that sound like keywords are rejected only 74% of the time by `ds_cnn`
   (*light* is taken for `bright`, *land* for `lamp`), and `lamp` has just 30 test
   clips and 70% recall. Not yet tested on the board or on our own voices.
-- Results with the wake word `crystal`: to be added after retraining.
+- Results with the wake word `crystal` (same setup): `ds_cnn` 90% accuracy,
+  `tiny_conv` 80%. `ds_cnn` recall: `crystal` 95% (201 test clips), `on` 92%,
+  `off` 91%, `bright` 94%.
+- Wake word comparison, `ds_cnn`, both models scored on the same 15,894 test
+  clips of other words:
+
+  | | `lamp` | `crystal` |
+  |---|---|---|
+  | Wake word recall at a score threshold of 0.8 | 53% | 92% |
+  | False wakes at 0.8, Speech Commands words | 0.28% | 0.03% |
+  | False wakes at 0.8, MSWC words (mostly chosen sound-alikes) | 1.8% | 3.2% |
+  | Wake word recall when the threshold allows 0.5% false wakes | 43% | 83% |
+
+  `crystal` is heard far more reliably and almost never fires on ordinary
+  words. What still triggers it are words with the same "s-t" pattern:
+  *Christian*, *system*, *sister*, *Bristol*, *coastal*. The pool holds 36
+  sound-alikes of `crystal` and 10 of `lamp`, so the MSWC row is harder on
+  `crystal`.
+- Weakest spot now: `bright` precision (61% for `ds_cnn`), mostly *light* and
+  *right* taken for `bright`. Still not tested on the board or on our own voices.
 
 ### Phase 3: Baseline on the board
 - Install Arduino IDE or `arduino-cli`, the Nano 33 BLE core and the

@@ -37,7 +37,7 @@ Run them in order.
 | Notebook | What it does | Time |
 |---|---|---|
 | `00_environment_check.ipynb` | Confirms TensorFlow, the audio front end and int8 conversion work. Ends with `Environment OK.` | under a minute |
-| `01_prepare_data.ipynb` | Downloads Google Speech Commands (2.4 GB) and streams the MSWC archive (35 GB read, about 1 GB kept) to collect `crystal`, `bright`, `off` and unknown words. | about an hour, mostly the MSWC stream |
+| `01_prepare_data.ipynb` | Downloads Google Speech Commands (2.4 GB) and streams the MSWC archive (35 GB read, about 1 GB kept) to collect `crystal`, `bright`, `off` and unknown words. | 40 to 90 minutes, mostly the MSWC stream |
 | `02_train_keywords.ipynb` | Trains two models, converts them to int8 TensorFlow Lite, reports accuracy, and writes `.tflite` and C array files to `models/<wake word>/`. | 20 to 30 minutes on a laptop CPU |
 
 The data steps skip themselves once the data is on disk. The MSWC fetch can also be
