@@ -65,7 +65,7 @@ whether the terminal may use the microphone.
 
 | Option | Use |
 |---|---|
-| `--model models/crystal/tiny_conv` | another model folder (default: `models/crystal/ds_cnn`) |
+| `models/crystal_v1/ds_cnn` | another model folder, given first (default: `models/crystal/ds_cnn`) |
 | `--threshold 0.8` | score a keyword needs to count (default 0.7); higher means fewer false triggers and more missed words |
 | `--window 3` | seconds a command is accepted after the wake word (default 2) |
 | `--list-devices`, `--device 2` | show the microphones, pick one |

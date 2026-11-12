@@ -7,7 +7,8 @@ rule (the wake word first, then a command within a short time).
 
     uv run python -m fairy_kws.listen                       # default model and microphone
     uv run python -m fairy_kws.listen --list-devices
-    uv run python -m fairy_kws.listen --model models/crystal/tiny_conv --threshold 0.9
+    uv run python -m fairy_kws.listen models/crystal_v1/ds_cnn   # another model folder
+    uv run python -m fairy_kws.listen models/crystal/tiny_conv --threshold 0.9
     uv run python -m fairy_kws.listen --file recording.wav  # a WAV file instead of the microphone
 
 Stop with Ctrl+C.
@@ -243,12 +244,14 @@ def run(
 def main(argv: list[str] | None = None) -> list[Detection]:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     add = parser.add_argument
+    default_model = config.MODELS_DIR / config.WAKE_WORD / "ds_cnn"
     add(
-        "--model",
+        "model",
+        nargs="?",
         type=Path,
-        default=config.MODELS_DIR / config.WAKE_WORD / "ds_cnn",
-        help="folder written by the training notebook (default: %(default)s)",
+        help=f"model folder written by the training notebook (default: {default_model})",
     )
+    add("--model", dest="model_option", type=Path, help="the same, as an option")
     add("--threshold", type=float, default=0.7, help="score a keyword needs (default: 0.7)")
     add("--window", type=float, default=2.0, help="seconds a command is accepted (default: 2)")
     add("--average", type=float, default=0.3, help="seconds of scores averaged (default: 0.3)")
@@ -257,6 +260,9 @@ def main(argv: list[str] | None = None) -> list[Detection]:
     add("--list-devices", action="store_true", help="show the microphones and exit")
     add("--file", type=Path, help="classify a sound file instead of the microphone")
     args = parser.parse_args(argv)
+    if args.model and args.model_option:
+        parser.error("give the model folder once, not both with and without --model")
+    args.model = args.model or args.model_option or default_model
 
     if args.list_devices:
         import sounddevice as sd

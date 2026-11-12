@@ -92,5 +92,7 @@ def test_sound_file_runs_through_the_whole_pipeline(tmp_path, capsys):
     assert scores.shape == (len(LABELS),)
     np.testing.assert_allclose(scores.sum(), 1.0, atol=0.02)
 
-    listen.main(["--model", str(model_dir), "--file", str(tmp_path / "noise.wav")])
-    assert f'Say "{WAKE}"' in capsys.readouterr().out
+    # The model folder is accepted with and without --model.
+    for model_args in ([str(model_dir)], ["--model", str(model_dir)]):
+        listen.main([*model_args, "--file", str(tmp_path / "noise.wav")])
+        assert f'Say "{WAKE}"' in capsys.readouterr().out
