@@ -68,15 +68,39 @@ tensor arena is sized for the larger one.
 | Red LED blinking | set-up failed; the serial port repeats the reason |
 
 The serial port (9600 baud) prints every detection and, every two seconds, a
-status line with the classification rate, the inference time and the current
-scores:
+status line with the classification rate, the inference time, the current
+scores and the microphone level:
 
 ```
 fairy-light-sense, model crystal_ds_cnn, 38232 bytes, tensor arena 30432 of 49152 bytes used
+mic gain 20 (-10.0 dB), "+" and "-" change it
 Say "crystal", then a command.
-[crystal_ds_cnn] 3.1 classifications/s, inference 290.4 ms | crystal 0.00 on 0.00 off 0.00 bright 0.00 low 0.00 | lamp OFF
-37.6 s  off 0.98  ->  ignored, say "crystal" first
+[crystal_ds_cnn] 3.1/s 290 ms | crystal 0.00 on 0.00 off 0.00 bright 0.00 low 0.00 | mic -52 dB gain 20 | lamp OFF
+37.6 s  off 0.98  mic -14 dB  ->  ignored, say "crystal" first
 ```
+
+## Microphone gain
+
+`mic` is the loudest level the microphone picked up, in dB below full scale:
+0 dB is clipping. A status line shows the loudest level since the previous
+one, a detection the loudest of about the last second. The clips the models
+were trained on peak at about -6 to -12 dB, so a voice that arrives far below
+that is harder to recognise.
+
+The gain goes from 0 to 80 in steps of half a decibel; 40 is neutral (0 dB).
+The board starts at 20 (-10 dB), the value of the micro_speech example. To
+change it:
+
+- **While the board runs:** type `+` or `-` in the serial monitor. Each key
+  press is 3 dB and the board prints the new gain. The change lasts until the
+  board restarts.
+- **For good:** set `MIC_GAIN` in `src/microphone.h`, or add
+  `-D MIC_GAIN=<0..80>` to `build_flags` in `platformio.ini`.
+
+To find a value, speak from where the board should still hear you and raise the
+gain until your voice peaks near -10 dB; then speak close to the board and
+check that it stays below 0 dB. More gain raises the room noise by the same
+amount.
 
 ## Layout
 
@@ -85,6 +109,7 @@ Say "crystal", then a command.
 ├── src/
 │   ├── main.cpp               set-up and the listen/classify loop
 │   ├── lamp_recognizer.*      averaging, threshold and the wake word rule
+│   ├── microphone.*           microphone gain and level
 │   └── lamp_output.*          LEDs (later: the LED string)
 ├── models/<name>/model_data.* generated: a model and its labels
 └── lib/micro_speech/          microphone and feature code of the micro_speech example

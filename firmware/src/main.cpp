@@ -14,6 +14,7 @@
 #include "lamp_output.h"
 #include "lamp_recognizer.h"
 #include "micro_features_micro_model_settings.h"
+#include "microphone.h"
 #include "model_data.h"
 #include "tensorflow/lite/micro/micro_error_reporter.h"
 #include "tensorflow/lite/micro/micro_interpreter.h"
@@ -50,13 +51,34 @@ int32_t last_status_time = 0;
 uint32_t inference_micros = 0;
 uint32_t loop_count = 0;
 
+// Microphone level: the loudest of the last few loops (about a second, for the
+// detection line) and of the time since the last status line.
+constexpr int kRecentPeaks = 4;
+float recent_peaks_db[kRecentPeaks] = {-90.0f, -90.0f, -90.0f, -90.0f};
+int recent_peak_index = 0;
+float status_peak_db = -90.0f;
+
+void PrintMicGain() {
+  Serial.print("mic gain ");
+  Serial.print(MicGain());
+  Serial.print(" (");
+  Serial.print(MicGainDb(), 1);
+  Serial.println(" dB), \"+\" and \"-\" change it");
+}
+
 void PrintDetection(const Detection& detection, int32_t now_ms) {
   Serial.print(now_ms / 1000.0f, 1);
   Serial.print(" s  ");
   Serial.print(kCategoryLabels[detection.label]);
   Serial.print(" ");
   Serial.print(detection.score, 2);
-  Serial.print("  ->  ");
+  float peak_db = recent_peaks_db[0];
+  for (int i = 1; i < kRecentPeaks; ++i) {
+    peak_db = max(peak_db, recent_peaks_db[i]);
+  }
+  Serial.print("  mic ");
+  Serial.print(peak_db, 0);
+  Serial.print(" dB  ->  ");
   if (detection.label == kWakeWordIndex) {
     Serial.println("listening for a command");
   } else if (detection.accepted) {
@@ -76,8 +98,8 @@ void PrintStatus(int32_t now_ms) {
   Serial.print(kModelName);
   Serial.print("] ");
   Serial.print(loop_count * 1000.0f / elapsed, 1);
-  Serial.print(" classifications/s, inference ");
-  Serial.print(inference_micros / 1000.0f / (loop_count ? loop_count : 1), 1);
+  Serial.print("/s ");
+  Serial.print(inference_micros / 1000.0f / (loop_count ? loop_count : 1), 0);
   Serial.print(" ms |");
   for (int i = kWakeWordIndex; i < kCategoryCount; ++i) {
     Serial.print(" ");
@@ -85,8 +107,13 @@ void PrintStatus(int32_t now_ms) {
     Serial.print(" ");
     Serial.print(recognizer.average()[i], 2);
   }
+  Serial.print(" | mic ");
+  Serial.print(status_peak_db, 0);
+  Serial.print(" dB gain ");
+  Serial.print(MicGain());
   Serial.print(" | lamp ");
   Serial.println(LampStateName(lamp));
+  status_peak_db = -90.0f;
   last_status_time = now_ms;
   inference_micros = 0;
   loop_count = 0;
@@ -156,6 +183,8 @@ void setup() {
   Serial.print(" of ");
   Serial.print(kTensorArenaSize);
   Serial.println(" bytes used");
+  StartMicrophone(error_reporter, MIC_GAIN);
+  PrintMicGain();
   Serial.print("Say \"");
   Serial.print(kCategoryLabels[kWakeWordIndex]);
   Serial.println("\", then a command.");
@@ -174,6 +203,15 @@ void loop() {
     return;
   }
 
+  // "+" and "-" from the serial monitor change the microphone gain.
+  while (Serial.available() > 0) {
+    const int key = Serial.read();
+    if (key == '+' || key == '-') {
+      SetMicGain(MicGain() + (key == '+' ? kMicGainStep : -kMicGainStep));
+      PrintMicGain();
+    }
+  }
+
   // Update the feature map with the audio that arrived since the last loop.
   const int32_t current_time = LatestAudioTimestamp();
   int how_many_new_slices = 0;
@@ -183,10 +221,14 @@ void loop() {
     TF_LITE_REPORT_ERROR(error_reporter, "Feature generation failed");
     return;
   }
+  const float peak_db = MicPeakDb(error_reporter, previous_time, current_time);
   previous_time = current_time;
   if (how_many_new_slices == 0) {
     return;
   }
+  recent_peaks_db[recent_peak_index] = peak_db;
+  recent_peak_index = (recent_peak_index + 1) % kRecentPeaks;
+  status_peak_db = max(status_peak_db, peak_db);
 
   memcpy(model_input->data.int8, feature_buffer, kFeatureElementCount);
   const uint32_t start = micros();
