@@ -84,8 +84,15 @@ uv run python -m fairy_kws.firmware
 cd firmware && pio run --target upload
 ```
 
-See [firmware/README.md](firmware/README.md) for what the LEDs and the serial
-output mean.
+Several models can sit in the firmware side by side, each flashed by name, for
+example the model from before `low` was added:
+
+```bash
+cd firmware && pio run -e crystal_v1_ds_cnn --target upload
+```
+
+See [firmware/README.md](firmware/README.md) for the list of models, how to add
+one, and what the LEDs and the serial output mean.
 
 ## Development
 

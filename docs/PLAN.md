@@ -184,6 +184,8 @@ Metrics, in order of importance for a lamp that sits in a living room:
   `Harvard_TinyMLx`: its microphone and feature code, our model, our recogniser
   (the same rule and settings as `fairy_kws.listen`) and LED output.
   `uv run python -m fairy_kws.firmware` puts a trained model and its labels in.
+  Each model is its own PlatformIO environment (`pio run -e <name>`), so models
+  can be compared on the board without regenerating anything.
 - `ds_cnn` loads and runs on the Nano 33 BLE Sense: 290 ms per inference, 3.1
   classifications per second, 30 kB of tensor arena. The blue LED shows the
   command window, the orange LED the lamp state.

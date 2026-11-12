@@ -21,6 +21,44 @@ pio device monitor
 The first build downloads the `Harvard_TinyMLx` library (TensorFlow Lite for
 Microcontrollers 2.4 with CMSIS-NN).
 
+Close any serial monitor (`pio device monitor`, `tio`, ...) before flashing. With
+a monitor open the upload either cannot open the port or loses the board half
+way, which leaves it waiting in its bootloader (orange LED fading in and out).
+If that happens, close the monitor and upload again.
+
+## Models
+
+Every model is a PlatformIO environment: the same sources in `src/`, built with
+the model in `models/<name>/`. Flash one by name:
+
+```bash
+pio run -e crystal_v1_ds_cnn --target upload
+```
+
+| Environment | Model | Commands |
+|---|---|---|
+| `crystal_ds_cnn` (default) | `models/crystal/ds_cnn` | on, off, bright, low |
+| `crystal_v1_ds_cnn` | `models/crystal_v1/ds_cnn` | on, off, bright |
+
+Each environment keeps its own build, so after the first build of each,
+switching takes only the upload (about 15 seconds). Every status line on the
+serial port starts with the name of the model that is running.
+
+To add a model, or to refresh one after training, run this from the repository
+root with a model folder of the training notebook:
+
+```bash
+uv run python -m fairy_kws.firmware models/crystal/tiny_conv
+```
+
+It writes `models/crystal_tiny_conv/model_data.h` and `model_data.cpp` (the
+model and its labels) and adds `[env:crystal_tiny_conv]` to `platformio.ini`.
+The name comes from the last two folder names; `--name` sets another. Without
+an argument it takes `models/crystal/ds_cnn`. The command refuses a model whose
+input scaling differs from what the firmware computes. Both architectures run
+without other changes: `main.cpp` registers the operations of both and the
+tensor arena is sized for the larger one.
+
 ## What the board does
 
 | Signal | Meaning |
@@ -34,36 +72,21 @@ status line with the classification rate, the inference time and the current
 scores:
 
 ```
-fairy-light-sense, model crystal/ds_cnn, 38232 bytes, tensor arena 30432 of 49152 bytes used
+fairy-light-sense, model crystal_ds_cnn, 38232 bytes, tensor arena 30432 of 49152 bytes used
 Say "crystal", then a command.
-status: 3.1 classifications/s, inference 290.4 ms | crystal 0.00 on 0.00 off 0.00 bright 0.00 low 0.00 | lamp OFF
+[crystal_ds_cnn] 3.1 classifications/s, inference 290.4 ms | crystal 0.00 on 0.00 off 0.00 bright 0.00 low 0.00 | lamp OFF
 37.6 s  off 0.98  ->  ignored, say "crystal" first
 ```
-
-## Changing the model
-
-`src/model_data.h` and `src/model_data.cpp` are generated from a model folder of
-the training notebook and hold the model together with its labels. From the
-repository root:
-
-```bash
-uv run python -m fairy_kws.firmware models/crystal/tiny_conv
-```
-
-Without an argument it takes `models/crystal/ds_cnn`. The command refuses a
-model whose input scaling differs from what the firmware computes. Both
-architectures run without other changes: `main.cpp` registers the operations of
-both and the tensor arena is sized for the larger one.
 
 ## Layout
 
 ```
-├── platformio.ini
+├── platformio.ini             one environment per model
 ├── src/
 │   ├── main.cpp               set-up and the listen/classify loop
 │   ├── lamp_recognizer.*      averaging, threshold and the wake word rule
-│   ├── lamp_output.*          LEDs (later: the LED string)
-│   └── model_data.*           generated: model and labels
+│   └── lamp_output.*          LEDs (later: the LED string)
+├── models/<name>/model_data.* generated: a model and its labels
 └── lib/micro_speech/          microphone and feature code of the micro_speech example
 ```
 

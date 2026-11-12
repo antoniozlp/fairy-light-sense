@@ -71,7 +71,10 @@ void PrintDetection(const Detection& detection, int32_t now_ms) {
 
 void PrintStatus(int32_t now_ms) {
   const int32_t elapsed = now_ms - last_status_time;
-  Serial.print("status: ");
+  // The model name leads every status line, so a log shows which model was running.
+  Serial.print("[");
+  Serial.print(kModelName);
+  Serial.print("] ");
   Serial.print(loop_count * 1000.0f / elapsed, 1);
   Serial.print(" classifications/s, inference ");
   Serial.print(inference_micros / 1000.0f / (loop_count ? loop_count : 1), 1);

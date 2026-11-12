@@ -19,10 +19,11 @@ def exported_model(tmp_path, feature_max):
 
 def test_model_and_labels_are_written_together(tmp_path):
     model_dir, tflite_model = exported_model(tmp_path, feature_max=26)
-    header, source = firmware.write_model_sources(model_dir, tmp_path / "src")
+    header, source = firmware.write_model_sources(model_dir, tmp_path / "firmware")
 
+    assert header.parent == tmp_path / "firmware" / "models" / "crystal_tiny_conv"
     assert f"constexpr int kCategoryCount = {len(config.LABELS)};" in header.read_text()
-    assert 'kModelName[] = "crystal/tiny_conv"' in header.read_text()
+    assert 'kModelName[] = "crystal_tiny_conv"' in header.read_text()
     text = source.read_text()
     assert f"g_model_len = {len(tflite_model)};" in text
     labels = [f'"{label}"' for label in config.LABELS]
@@ -33,4 +34,15 @@ def test_model_with_other_input_scaling_is_refused(tmp_path):
     # Features in 0..1 instead of 0..26: the board would feed this model wrong values.
     model_dir, _ = exported_model(tmp_path, feature_max=1)
     with pytest.raises(ValueError, match="input quantisation"):
-        firmware.write_model_sources(model_dir, tmp_path / "src")
+        firmware.write_model_sources(model_dir, tmp_path / "firmware")
+
+
+def test_environment_is_added_once(tmp_path):
+    ini = tmp_path / "platformio.ini"
+    ini.write_text("[env]\nboard = nano33ble\n\n[env:crystal_ds_cnn]\n")
+
+    assert firmware.environment_name(tmp_path / "crystal_v1" / "ds_cnn") == "crystal_v1_ds_cnn"
+    assert firmware.add_environment("crystal_v1_ds_cnn", ini)
+    assert not firmware.add_environment("crystal_v1_ds_cnn", ini)
+    assert not firmware.add_environment("crystal_ds_cnn", ini)
+    assert ini.read_text().count("[env:crystal_v1_ds_cnn]") == 1
