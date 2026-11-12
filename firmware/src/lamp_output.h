@@ -5,7 +5,7 @@
 #ifndef FAIRY_LIGHT_SENSE_LAMP_OUTPUT_H_
 #define FAIRY_LIGHT_SENSE_LAMP_OUTPUT_H_
 
-enum class LampState { kOff, kOn, kBright };
+enum class LampState { kOff, kLow, kOn, kBright };
 
 void SetupLampOutput();
 void SetLamp(LampState state);

@@ -6,6 +6,7 @@ namespace {
 const int kLampPin = LED_BUILTIN;
 // PWM duty (0..255) for each lamp state.
 const int kDutyOff = 0;
+const int kDutyLow = 6;
 const int kDutyOn = 40;
 const int kDutyBright = 255;
 }  // namespace
@@ -27,6 +28,9 @@ void SetLamp(LampState state) {
     case LampState::kOff:
       analogWrite(kLampPin, kDutyOff);
       break;
+    case LampState::kLow:
+      analogWrite(kLampPin, kDutyLow);
+      break;
     case LampState::kOn:
       analogWrite(kLampPin, kDutyOn);
       break;
@@ -44,6 +48,8 @@ const char* LampStateName(LampState state) {
   switch (state) {
     case LampState::kOff:
       return "OFF";
+    case LampState::kLow:
+      return "LOW";
     case LampState::kOn:
       return "ON";
     case LampState::kBright:

@@ -212,6 +212,8 @@ void loop() {
         lamp = LampState::kOff;
       } else if (strcmp(word, "bright") == 0) {
         lamp = LampState::kBright;
+      } else if (strcmp(word, "low") == 0) {
+        lamp = LampState::kLow;
       }
       SetLamp(lamp);
     }

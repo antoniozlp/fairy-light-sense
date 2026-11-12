@@ -22,7 +22,7 @@ SILENCE_LABEL = "_silence_"
 UNKNOWN_LABEL = "_unknown_"
 # The wake word opens a short window in which the command words are accepted.
 WAKE_WORD = "crystal"
-KEYWORDS = [WAKE_WORD, "on", "off", "bright"]
+KEYWORDS = [WAKE_WORD, "on", "off", "bright", "low"]
 LABELS = [SILENCE_LABEL, UNKNOWN_LABEL, *KEYWORDS]
 
 # Words fetched from MSWC. The first group are keywords or possible future
@@ -30,9 +30,9 @@ LABELS = [SILENCE_LABEL, UNKNOWN_LABEL, *KEYWORDS]
 # like our keywords or are very common; they go into the "unknown" class so the
 # model learns to tell "crystal" from "Christmas" and "on" from "one".
 MSWC_KEYWORD_CANDIDATES = [
-    *["crystal", "off", "bright"],
+    *["crystal", "off", "bright", "low"],
     *["lamp", "star", "magic"],  # other wake word candidates
-    *["dim", "light", "lights", "low", "dark"],  # other command candidates
+    *["dim", "light", "lights", "dark"],  # other command candidates
 ]
 MSWC_KEYWORD_CAP = 4000
 MSWC_UNKNOWN_WORDS = [

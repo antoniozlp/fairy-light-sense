@@ -7,7 +7,7 @@
 constexpr char kModelName[] = "crystal/ds_cnn";
 
 // Output categories of the model, in order. The wake word is the first keyword.
-constexpr int kCategoryCount = 6;
+constexpr int kCategoryCount = 7;
 constexpr int kSilenceIndex = 0;
 constexpr int kUnknownIndex = 1;
 constexpr int kWakeWordIndex = 2;

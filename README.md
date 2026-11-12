@@ -1,7 +1,7 @@
 # fairy-light-sense
 
 A fairy light lamp controlled by voice. A small keyword spotting model listens for
-commands such as "crystal on", "crystal off" and "crystal bright" directly on an Arduino
+commands such as "crystal on", "crystal off", "crystal bright" and "crystal low" directly on an Arduino
 Nano 33 BLE Sense, using TensorFlow Lite for Microcontrollers.
 
 The full roadmap, dataset notes and open decisions are in [docs/PLAN.md](docs/PLAN.md).
@@ -37,7 +37,7 @@ Run them in order.
 | Notebook | What it does | Time |
 |---|---|---|
 | `00_environment_check.ipynb` | Confirms TensorFlow, the audio front end and int8 conversion work. Ends with `Environment OK.` | under a minute |
-| `01_prepare_data.ipynb` | Downloads Google Speech Commands (2.4 GB) and streams the MSWC archive (35 GB read, about 1 GB kept) to collect `crystal`, `bright`, `off` and unknown words. | 40 to 90 minutes, mostly the MSWC stream |
+| `01_prepare_data.ipynb` | Downloads Google Speech Commands (2.4 GB) and streams the MSWC archive (35 GB read, about 1 GB kept) to collect `crystal`, `bright`, `low`, `off` and unknown words. | 40 to 90 minutes, mostly the MSWC stream |
 | `02_train_keywords.ipynb` | Trains two models, converts them to int8 TensorFlow Lite, reports accuracy, and writes `.tflite` and C array files to `models/<wake word>/`. | 20 to 30 minutes on a laptop CPU |
 
 The data steps skip themselves once the data is on disk. The MSWC fetch can also be
@@ -58,7 +58,7 @@ seconds after the wake word.
 uv run python -m fairy_kws.listen
 ```
 
-Say "crystal", then "on", "off" or "bright". The line at the bottom shows whether
+Say "crystal", then "on", "off", "bright" or "low". The line at the bottom shows whether
 a command is awaited, the lamp state, the microphone level and the current score
 of each keyword; every detection is printed above it. Stop with Ctrl+C. The first time, macOS asks
 whether the terminal may use the microphone.

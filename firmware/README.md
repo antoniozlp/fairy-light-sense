@@ -2,8 +2,8 @@
 
 PlatformIO project for the Arduino Nano 33 BLE Sense. It listens with the
 on-board microphone, runs the int8 keyword model with TensorFlow Lite for
-Microcontrollers, and applies the lamp's rule: say "crystal", then "on", "off"
-or "bright" within two seconds.
+Microcontrollers, and applies the lamp's rule: say "crystal", then "on", "off",
+"bright" or "low" within two seconds.
 
 ## Build and flash
 
@@ -26,7 +26,7 @@ Microcontrollers 2.4 with CMSIS-NN).
 | Signal | Meaning |
 |---|---|
 | Blue LED on | the wake word was heard; a command is accepted for 2 s |
-| Orange LED off / dim / full | lamp OFF / ON / BRIGHT |
+| Orange LED off / faint / dim / full | lamp OFF / LOW / ON / BRIGHT |
 | Red LED blinking | set-up failed; the serial port repeats the reason |
 
 The serial port (9600 baud) prints every detection and, every two seconds, a
@@ -34,9 +34,9 @@ status line with the classification rate, the inference time and the current
 scores:
 
 ```
-fairy-light-sense, model crystal/ds_cnn, 38160 bytes, tensor arena 30432 of 49152 bytes used
+fairy-light-sense, model crystal/ds_cnn, 38232 bytes, tensor arena 30432 of 49152 bytes used
 Say "crystal", then a command.
-status: 3.1 classifications/s, inference 290.4 ms | crystal 0.00 on 0.00 off 0.00 bright 0.00 | lamp OFF
+status: 3.1 classifications/s, inference 290.4 ms | crystal 0.00 on 0.00 off 0.00 bright 0.00 low 0.00 | lamp OFF
 37.6 s  off 0.98  ->  ignored, say "crystal" first
 ```
 

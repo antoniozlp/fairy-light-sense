@@ -9,6 +9,7 @@ models trained for different wake words sit side by side:
 
 ```
 models/
-├── crystal/{tiny_conv,ds_cnn}/   # current wake word
-└── lamp/{tiny_conv,ds_cnn}/      # first wake word, kept for comparison
+├── crystal/{tiny_conv,ds_cnn}/     # current: crystal + on, off, bright, low
+├── crystal_v1/{tiny_conv,ds_cnn}/  # copy of the models before `low` was added
+└── lamp/{tiny_conv,ds_cnn}/        # first wake word, kept for comparison
 ```
