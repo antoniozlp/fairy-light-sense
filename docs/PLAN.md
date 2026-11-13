@@ -22,10 +22,10 @@ there are two ways to handle that:
 
 | | A. Single words + state machine (recommended) | B. Whole phrase as one class |
 |---|---|---|
-| Model classes | silence, unknown, `crystal`, `on`, `off`, `bright`, `low` | silence, unknown, `crystal on`, `crystal off`, `crystal bright`, … |
+| Model classes | silence, unknown, `crystal`, `light`, `off`, `bright`, `low` | silence, unknown, `crystal on`, `crystal off`, `crystal bright`, … |
 | Audio window | 1 s, 49×40 features (unchanged from `micro_speech`) | 1.5–2 s, about twice the input and compute |
-| Public data | `on`/`off` in Speech Commands; `crystal`/`bright`/`low` in MSWC | none; every clip must be recorded or synthesised |
-| Firmware | hear `crystal`, then accept `on`/`off`/`bright`/`low` for about 2 s | direct mapping, no state machine |
+| Public data | `off` in Speech Commands; `crystal`/`light`/`bright`/`low` in MSWC | none; every clip must be recorded or synthesised |
+| Firmware | hear `crystal`, then accept `light`/`off`/`bright`/`low` for about 2 s | direct mapping, no state machine |
 | False triggers | low: two detections in a row are needed | depends entirely on the custom data |
 | Adding a command | one new word | one new phrase, new recordings |
 
@@ -63,8 +63,8 @@ Both are checked on this machine by `notebooks/00_environment_check.ipynb`
 
 | Source | What it gives us | Licence | Notes |
 |---|---|---|---|
-| [Google Speech Commands v2](https://www.tensorflow.org/datasets/catalog/speech_commands) | `on`, `off`; 33 other words for the "unknown" class; background noise clips | CC BY 4.0 | About 2.4 GB, roughly 105,000 one-second clips, 35 words. Does **not** contain `crystal`, `lamp`, `bright`, `dim` or `light`. |
-| [Multilingual Spoken Words Corpus (MSWC)](https://mlcommons.org/datasets/multilingual-spoken-words/) | `crystal`, `bright`, `low`, more `off`, and similar-sounding words for the unknown class | CC BY 4.0 | One-second clips cut from Common Voice sentences. English audio is a single 35 GB archive, which `fairy_kws.mswc` streams once, keeping only the words we ask for. No words shorter than three letters, so no `on`. |
+| [Google Speech Commands v2](https://www.tensorflow.org/datasets/catalog/speech_commands) | `off`; 34 other words for the "unknown" class; background noise clips | CC BY 4.0 | About 2.4 GB, roughly 105,000 one-second clips, 35 words. Does **not** contain `crystal`, `lamp`, `bright`, `dim` or `light`. |
+| [Multilingual Spoken Words Corpus (MSWC)](https://mlcommons.org/datasets/multilingual-spoken-words/) | `crystal`, `light`, `bright`, `low`, more `off`, and similar-sounding words for the unknown class | CC BY 4.0 | One-second clips cut from Common Voice sentences. English audio is a single 35 GB archive, which `fairy_kws.mswc` streams once, keeping only the words we ask for. No words shorter than three letters, so no `on`. |
 | Own recordings | All keywords, in the voices and rooms that matter | ours | The tinyMLx custom-dataset colab uses the Open Speech Recording web tool. Recording through the board's own microphone gives the best match to deployment. Target: 50–100 clips per word per speaker, several speakers. |
 | Synthetic speech (TTS) | Hundreds of voices for any word, cheaply | depends on the voice model | The approach used by the [microWakeWord](https://github.com/OHF-Voice/micro-wake-word) project (Piper TTS plus noise and room augmentation). Good for volume; real recordings are still needed for validation. |
 
@@ -72,17 +72,19 @@ Clips available per word (checked against the MSWC metadata):
 
 | Word | Speech Commands | MSWC | Verdict |
 |---|---|---|---|
-| `on` | 3,845 | not included | fine |
+| `light` | none | 2,998 | fine; switches the lamp on |
+| `on` | 3,845 | not included | replaced by `light`; now part of the unknown class |
 | `off` | 3,745 | 6,511 | fine |
 | `bright` | none | 1,733 | fine |
 | `low` | none | 1,740 | fine; the counterpart to `bright` |
 | `crystal` | none | 2,003 | fine |
 | `lamp` | none | 292 | thin; the first wake word, replaced by `crystal` |
 | `dim` | none | 74 | too few to train on |
-| `dark` / `light` | none | 1,557 / 2,998 | available if another command is wanted |
+| `dark` | none | 1,557 | available if another command is wanted |
 
-Vocabulary: `crystal` (wake word), `on`, `off`, `bright`, `low`. The lamp has
-three levels: low, on and bright. `low` was chosen over `dim`, which would need
+Vocabulary: `crystal` (wake word), `light`, `off`, `bright`, `low`. The lamp has
+three levels: low, on and bright; `light` switches it on. The first models used
+`on`, which the board often took for `off`. `low` was chosen over `dim`, which would need
 our own recordings or synthetic speech.
 
 Own recordings remain the way to build a test set that reflects real use and to
@@ -103,7 +105,7 @@ Metrics, in order of importance for a lamp that sits in a living room:
 
 1. **False activations per hour** on continuous non-command audio (speech, TV, music).
 2. Per-word recall on the held-out recorded test set.
-3. Confusion between `on` and `off`.
+3. Commands taken for the opposite one (`light` and `off`, `bright` and `low`).
 4. Size and latency on the board.
 
 ## 4. Phases
@@ -167,6 +169,32 @@ Metrics, in order of importance for a lamp that sits in a living room:
 - Early stopping now waits 15 epochs instead of 8. With 8, the first run
   with `low` stopped at epoch 21 on one lucky validation score and lost 9
   points of `crystal` recall.
+- `light` replaced `on` (the models with `on` are kept in `models/crystal_v2/`).
+  On the board `on` was often heard as `off`: the two words share a vowel and
+  differ only in their quiet last sound. `on` is now part of the unknown
+  class. `lights` is left out of the data: it is too close to `light` to be a
+  useful counter-example. `ds_cnn`, same setup: 86% accuracy.
+
+  | `ds_cnn` | with `on` | with `light` |
+  |---|---|---|
+  | Recall `crystal` | 95.0% | 91.5% |
+  | Recall `on` / `light` | 92.4% | 85.0% |
+  | Recall `off` | 88.5% | 88.8% |
+  | Recall `bright` | 93.1% | 93.1% |
+  | Recall `low` | 83.3% | 76.4% |
+  | `on` / `light` answered as `off` | 2.8% (11 of 396) | 0% (0 of 300) |
+  | `off` answered as `on` / `light` | 1.7% (18 of 1,031) | 0.8% (8 of 1,031) |
+
+  The mix-up with `off` is gone on the test set, but `light` is recognised
+  less often than `on` was: 9% of its clips are answered as `bright` (27 of
+  300) and 6% of the `bright` clips as `light`. At the threshold of 0.7 its
+  recall is 68% (`on`: 89%), and on simulated streams about 65% of "crystal,
+  light" commands complete (`on`: about 80%). Part of the gap is the data:
+  the `light` clips are cut from sentences (MSWC), the `on` clips were
+  isolated words. `crystal` and `low` are also lower in this run, with no
+  change to their data. Someone saying *lights* gets `light` in 59% of
+  clips; someone still saying *on* gets `off` in 9%. Sound-alikes of `light`
+  (*night*, *like*, *life*) are not in the data yet.
 
 ### Phase 2b: Live test on the computer (script done, real voices to do)
 - `uv run python -m fairy_kws.listen` runs the int8 model on the computer's
@@ -209,6 +237,10 @@ Metrics, in order of importance for a lamp that sits in a living room:
 - The model with `low` runs at the same speed (289 ms); the lamp output has
   the levels OFF, LOW, ON and BRIGHT. A first live test of "crystal low" on
   the board worked.
+- Tests of several models on the board showed `on` often taken for `off`, far
+  more than the 3% of the test set. `light` replaced it; the new model is built
+  (`crystal_ds_cnn`, the model with `on` is `crystal_v2_ds_cnn`) and still has
+  to be compared on the board.
 - Still to do: test quick speech without a pause, other voices, more
   distance and background noise; false triggers over an hour of TV or
   conversation; the **feature parity test** (print the features the board
@@ -221,10 +253,10 @@ Metrics, in order of importance for a lamp that sits in a living room:
 - Decide between `tiny_conv` and `ds_cnn` from accuracy and measured on-board speed.
 
 ### Phase 5: Lamp behaviour and hardware
-- Firmware state machine: `crystal` opens a ~2 s window; `on`/`off`/`bright`/`low`
+- Firmware state machine: `crystal` opens a ~2 s window; `light`/`off`/`bright`/`low`
   act only inside it.
 - Drive the LED string through a logic-level MOSFET with PWM (the board's pins are
-  3.3 V and cannot power the string directly); three brightness levels for `low`, `on` and `bright`.
+  3.3 V and cannot power the string directly); three brightness levels for `low`, `light` and `bright`.
 - Visual feedback when the wake word is heard (short pulse of the lights).
 
 ### Phase 6: Towards a product
@@ -239,7 +271,7 @@ Metrics, in order of importance for a lamp that sits in a living room:
 
 | Risk | Mitigation |
 |---|---|
-| `crystal`, `bright` and `low` come only from MSWC, `on` only from Speech Commands, so the model may learn recording style along with the word | Background noise mixed into every clip; own recordings of all words next |
+| `crystal`, `light`, `bright` and `low` come only from MSWC, so the model may learn recording style along with the word | Background noise mixed into every clip; own recordings of all words next |
 | Training and device features differ | Same micro front end on both sides; parity test in Phase 3 |
 | False activations from ordinary speech or TV | Wake word + command, threshold tuning, plenty of "unknown" data, measure per hour |
 | `Harvard_TinyMLx` Arduino library is no longer actively updated | It is fine as the starting point; fall back to the upstream `tflite-micro` Arduino examples if it fails to build with a current core |

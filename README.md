@@ -58,7 +58,7 @@ seconds after the wake word.
 uv run python -m fairy_kws.listen
 ```
 
-Say "crystal", then "on", "off", "bright" or "low". The line at the bottom shows whether
+Say "crystal", then "light", "off", "bright" or "low". The line at the bottom shows whether
 a command is awaited, the lamp state, the microphone level and the current score
 of each keyword; every detection is printed above it. Stop with Ctrl+C. The first time, macOS asks
 whether the terminal may use the microphone.

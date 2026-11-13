@@ -22,17 +22,19 @@ SILENCE_LABEL = "_silence_"
 UNKNOWN_LABEL = "_unknown_"
 # The wake word opens a short window in which the command words are accepted.
 WAKE_WORD = "crystal"
-KEYWORDS = [WAKE_WORD, "on", "off", "bright", "low"]
+# "light" switches the lamp on. It replaced "on", which was too often heard as
+# "off" on the board: the two differ only in their quiet last sound.
+KEYWORDS = [WAKE_WORD, "light", "off", "bright", "low"]
 LABELS = [SILENCE_LABEL, UNKNOWN_LABEL, *KEYWORDS]
 
 # Words fetched from MSWC. The first group are keywords or possible future
 # keywords (all clips, up to the cap). The second group are words that sound
 # like our keywords or are very common; they go into the "unknown" class so the
-# model learns to tell "crystal" from "Christmas" and "on" from "one".
+# model learns to tell "crystal" from "Christmas" and "bright" from "right".
 MSWC_KEYWORD_CANDIDATES = [
-    *["crystal", "off", "bright", "low"],
+    *["crystal", "light", "off", "bright", "low"],
     *["lamp", "star", "magic"],  # other wake word candidates
-    *["dim", "light", "lights", "dark"],  # other command candidates
+    *["dim", "lights", "dark"],  # other command candidates
 ]
 MSWC_KEYWORD_CAP = 4000
 MSWC_UNKNOWN_WORDS = [
@@ -48,6 +50,10 @@ MSWC_UNKNOWN_WORDS = [
     *["from", "they", "what", "there", "were", "about", "would", "people", "because", "some"],
 ]
 MSWC_UNKNOWN_CAP = 300
+# Words on disk that are left out of training and testing. "lights" is so close
+# to "light" that teaching the model to reject it would cost recall of "light",
+# and switching the lamp on for "lights" does no harm.
+EXCLUDED_WORDS = ["lights"]
 
 # --- Paths ---
 REPO_ROOT = Path(__file__).resolve().parents[2]

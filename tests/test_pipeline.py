@@ -65,3 +65,20 @@ def test_wanted_clips_applies_caps():
     wanted = mswc.wanted_clips(index)
     assert len(wanted["lamp"]) == 10
     assert len(wanted["lamb"]) == config.MSWC_UNKNOWN_CAP
+
+
+def test_clip_table_labels_keywords_and_leaves_out_excluded_words(tmp_path, monkeypatch):
+    for word in ["light", "lights", "on"]:
+        (tmp_path / word).mkdir()
+        (tmp_path / word / "a.wav").touch()
+    (tmp_path / "validation_list.txt").write_text("on/a.wav\n")
+    (tmp_path / "testing_list.txt").write_text("")
+    monkeypatch.setattr(dataset, "GSC_DIR", tmp_path)
+    monkeypatch.setattr(mswc, "SPLITS_PATH", tmp_path / "no_such_file.csv")
+    monkeypatch.setattr(config, "EXCLUDED_WORDS", ["lights"])
+
+    clips = dataset.build_clip_table(keywords=["light"]).set_index("word")
+    assert clips["label"].to_dict() == {"light": "light", "on": config.UNKNOWN_LABEL}
+    assert clips["split"].to_dict() == {"light": "train", "on": "val"}
+    # An excluded word can still be asked for by name.
+    assert "lights" in dataset.build_clip_table(keywords=["lights"])["word"].to_list()

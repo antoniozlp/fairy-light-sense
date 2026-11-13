@@ -2,8 +2,8 @@
 
 PlatformIO project for the Arduino Nano 33 BLE Sense. It listens with the
 on-board microphone, runs the int8 keyword model with TensorFlow Lite for
-Microcontrollers, and applies the lamp's rule: say "crystal", then "on", "off",
-"bright" or "low" within two seconds.
+Microcontrollers, and applies the lamp's rule: say "crystal", then "light",
+"off", "bright" or "low" within two seconds.
 
 ## Build and flash
 
@@ -37,8 +37,11 @@ pio run -e crystal_v1_ds_cnn --target upload
 
 | Environment | Model | Commands |
 |---|---|---|
-| `crystal_ds_cnn` (default) | `models/crystal/ds_cnn` | on, off, bright, low |
+| `crystal_ds_cnn` (default) | `models/crystal/ds_cnn` | light, off, bright, low |
+| `crystal_v2_ds_cnn` | `models/crystal_v2/ds_cnn` | on, off, bright, low |
 | `crystal_v1_ds_cnn` | `models/crystal_v1/ds_cnn` | on, off, bright |
+
+"light" and "on" both switch the lamp to ON; a model has one of the two.
 
 Each environment keeps its own build, so after the first build of each,
 switching takes only the upload (about 15 seconds). Every status line on the
@@ -75,7 +78,7 @@ scores and the microphone level:
 fairy-light-sense, model crystal_ds_cnn, 38232 bytes, tensor arena 30432 of 49152 bytes used
 mic gain 20 (-10.0 dB), "+" and "-" change it
 Say "crystal", then a command.
-[crystal_ds_cnn] 3.1/s 290 ms | crystal 0.00 on 0.00 off 0.00 bright 0.00 low 0.00 | mic -52 dB gain 20 | lamp OFF
+[crystal_ds_cnn] 3.1/s 290 ms | crystal 0.00 light 0.00 off 0.00 bright 0.00 low 0.00 | mic -52 dB gain 20 | lamp OFF
 37.6 s  off 0.98  mic -14 dB  ->  ignored, say "crystal" first
 ```
 

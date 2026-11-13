@@ -77,9 +77,12 @@ def _mswc_clips() -> pd.DataFrame:
 def build_clip_table(keywords: list[str] = config.KEYWORDS) -> pd.DataFrame:
     """One row per clip: path, word, source, split and the label the model should learn.
 
-    Words that are not keywords get the label "_unknown_".
+    Words that are not keywords get the label "_unknown_"; the words in
+    `config.EXCLUDED_WORDS` are left out, unless they are passed as keywords.
     """
     clips = pd.concat([_speech_commands_clips(), _mswc_clips()], ignore_index=True)
+    excluded = set(config.EXCLUDED_WORDS) - set(keywords)
+    clips = clips[~clips["word"].isin(excluded)]
     clips["label"] = clips["word"].where(clips["word"].isin(keywords), config.UNKNOWN_LABEL)
     return clips.sort_values("path", ignore_index=True)
 

@@ -249,9 +249,10 @@ void loop() {
   Detection detection;
   if (recognizer.Update(scores, current_time, &detection)) {
     if (detection.label != kWakeWordIndex && detection.accepted) {
-      // Categories after the wake word are the commands, in label order.
+      // Categories after the wake word are the commands. "light" switches the
+      // lamp on; the models before it use "on".
       const char* word = kCategoryLabels[detection.label];
-      if (strcmp(word, "on") == 0) {
+      if (strcmp(word, "light") == 0 || strcmp(word, "on") == 0) {
         lamp = LampState::kOn;
       } else if (strcmp(word, "off") == 0) {
         lamp = LampState::kOff;
