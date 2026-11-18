@@ -241,6 +241,16 @@ Metrics, in order of importance for a lamp that sits in a living room:
   more than the 3% of the test set. `light` replaced it; the new model is built
   (`crystal_ds_cnn`, the model with `on` is `crystal_v2_ds_cnn`) and still has
   to be compared on the board.
+- A second board, the ESP32-S3-DevKitC-1 with an INMP441 microphone on I2S,
+  has its own project, `firmware/esp32s3/` (ESP-IDF, Espressif's TensorFlow
+  Lite Micro with ESP-NN kernels), next to `firmware/nano33ble/`. Both build
+  the shared code in `firmware/common/` and the models in `firmware/models/`;
+  only audio capture, LEDs and the serial port differ per board. It has not run on hardware yet; the
+  comparison with the Nano (speed, recognition, false triggers) is to do.
+- The feature parity test exists for the computer: `tests/test_feature_parity.py`
+  compiles the firmware's feature code and compares its output with the
+  training features (equal within one int8 step). The same check on a board,
+  with audio from its microphone, is still to do.
 - Still to do: test quick speech without a pause, other voices, more
   distance and background noise; false triggers over an hour of TV or
   conversation; the **feature parity test** (print the features the board

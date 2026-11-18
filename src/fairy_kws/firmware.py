@@ -1,16 +1,19 @@
 """Put a trained model into the firmware.
 
-Each model gets its own folder and its own PlatformIO environment, so several
-can be kept side by side and flashed by name:
+The firmware has one PlatformIO project per board (firmware/nano33ble,
+firmware/esp32s3). Each model gets its own folder, shared by both, and an
+environment of the same name in each project, so several models can be kept
+side by side and flashed by name:
 
     uv run python -m fairy_kws.firmware                          # models/<wake word>/ds_cnn
     uv run python -m fairy_kws.firmware models/crystal_v1/ds_cnn
-    cd firmware && pio run -e crystal_v1_ds_cnn --target upload
+    cd firmware/nano33ble && pio run -e crystal_v1_ds_cnn --target upload
+    cd firmware/esp32s3 && pio run -e crystal_v1_ds_cnn --target upload
 
 The command writes `firmware/models/<name>/model_data.h` and `model_data.cpp`
 (the int8 model as a C array plus its label list, so the two cannot get out of
-step) and adds `[env:<name>]` to `firmware/platformio.ini` if it is missing.
-The name is the last two parts of the model folder joined by "_".
+step) and adds `[env:<name>]` to the `platformio.ini` of each board if it is
+missing. The name is the last two parts of the model folder joined by "_".
 """
 
 import argparse
@@ -23,7 +26,7 @@ from fairy_kws.export import Int8Model, c_array
 FIRMWARE_DIR = config.REPO_ROOT / "firmware"
 
 # The firmware turns the audio front end's output into int8 model input with fixed
-# arithmetic (micro_features_micro_features_generator.cpp): one int8 step is
+# arithmetic (micro_features_generator.cpp): one int8 step is
 # 25.6 * 26 / 256 front end units, which are 1 / 25.6 of a training feature unit.
 FIRMWARE_INPUT_SCALE = 26.0 / 256.0
 FIRMWARE_INPUT_ZERO_POINT = -128
@@ -44,6 +47,10 @@ def environment_name(model_dir: Path) -> str:
     """Name of the model in the firmware: models/crystal_v1/ds_cnn -> crystal_v1_ds_cnn."""
     model_dir = model_dir.resolve()
     return f"{model_dir.parent.name}_{model_dir.name}"
+
+
+# The PlatformIO project of each board, a folder of firmware/.
+BOARDS = ["nano33ble", "esp32s3"]
 
 
 def add_environment(name: str, ini_path: Path) -> bool:
@@ -126,9 +133,12 @@ def main(argv: list[str] | None = None) -> None:
     name = args.name or environment_name(args.model)
     for path in write_model_sources(args.model, name=name):
         print(f"wrote {path.relative_to(config.REPO_ROOT)}")
-    if add_environment(name, FIRMWARE_DIR / "platformio.ini"):
-        print(f"added [env:{name}] to firmware/platformio.ini")
-    print(f"flash it with: cd firmware && pio run -e {name} --target upload")
+    for board in BOARDS:
+        if add_environment(name, FIRMWARE_DIR / board / "platformio.ini"):
+            print(f"added [env:{name}] to firmware/{board}/platformio.ini")
+    print("flash it with:")
+    for board in BOARDS:
+        print(f"  cd firmware/{board} && pio run -e {name} --target upload")
 
 
 if __name__ == "__main__":

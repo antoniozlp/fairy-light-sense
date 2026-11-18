@@ -1,0 +1,20 @@
+# ESP-IDF settings of the ESP32-S3 firmware. PlatformIO turns them into
+# sdkconfig.<environment> on the first build; delete that file after a change
+# here.
+
+# Full clock speed and optimisation for speed: inference time is what we
+# compare with the Nano 33 BLE Sense.
+CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_240=y
+CONFIG_COMPILER_OPTIMIZATION_PERF=y
+
+# The model runs on the main task.
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=16384
+
+# 1 ms ticks, so the short pause after every loop costs 1 ms and not 10.
+CONFIG_FREERTOS_HZ=1000
+
+# Only warnings and errors of ESP-IDF itself on the serial port.
+CONFIG_LOG_DEFAULT_LEVEL_WARN=y
+
+# The smallest flash of an ESP32-S3-DevKitC-1; larger modules work with it too.
+CONFIG_ESPTOOLPY_FLASHSIZE_8MB=y

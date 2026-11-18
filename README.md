@@ -73,26 +73,34 @@ whether the terminal may use the microphone.
 
 ## Firmware
 
-`firmware/` is a PlatformIO project for the Arduino Nano 33 BLE Sense. Put a
-trained model into it, then build and flash:
+`firmware/` holds one PlatformIO project per board, `firmware/nano33ble/` for
+the Arduino Nano 33 BLE Sense and `firmware/esp32s3/` for the
+ESP32-S3-DevKitC-1 with an INMP441 microphone, plus the code and models they
+share. Put a trained model into it, then build and flash for one board:
 
 ```bash
 uv run python -m fairy_kws.firmware
 ```
 
 ```bash
-cd firmware && pio run --target upload
+cd firmware/nano33ble && pio run --target upload
+```
+
+```bash
+cd firmware/esp32s3 && pio run --target upload
 ```
 
 Several models can sit in the firmware side by side, each flashed by name, for
 example the model from before `low` was added:
 
 ```bash
-cd firmware && pio run -e crystal_v1_ds_cnn --target upload
+cd firmware/nano33ble && pio run -e crystal_v1_ds_cnn --target upload
 ```
 
 See [firmware/README.md](firmware/README.md) for the list of models, how to add
-one, and what the LEDs and the serial output mean.
+one, how to compare the two boards, and what the serial output means, and the
+README in each board's folder for its LEDs and, on the ESP32-S3, how to wire
+the microphone.
 
 ## Development
 

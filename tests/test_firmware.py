@@ -46,3 +46,14 @@ def test_environment_is_added_once(tmp_path):
     assert not firmware.add_environment("crystal_v1_ds_cnn", ini)
     assert not firmware.add_environment("crystal_ds_cnn", ini)
     assert ini.read_text().count("[env:crystal_v1_ds_cnn]") == 1
+
+
+def test_every_model_in_the_firmware_builds_on_both_boards():
+    """Each folder of firmware/models has an environment in each board's project."""
+    models = sorted(
+        p.parent.name for p in (firmware.FIRMWARE_DIR / "models").glob("*/model_data.h")
+    )
+    assert models
+    for board in firmware.BOARDS:
+        ini = (firmware.FIRMWARE_DIR / board / "platformio.ini").read_text()
+        assert [m for m in models if f"[env:{m}]" not in ini] == [], board

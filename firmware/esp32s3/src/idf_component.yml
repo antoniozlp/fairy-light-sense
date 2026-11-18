@@ -1,0 +1,8 @@
+# Components of the ESP32-S3 firmware, fetched by the ESP-IDF component manager
+# into managed_components/ on the first build.
+dependencies:
+  idf: ">=5.1"
+  # TensorFlow Lite Micro with the ESP-NN kernels (optimised for the ESP32-S3).
+  espressif/esp-tflite-micro: "^1.4.3"
+  # Driver of the addressable RGB LED on the board.
+  espressif/led_strip: "^3.0.0"
